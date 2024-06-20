@@ -83,10 +83,10 @@ true_coeffs_FE<-coef(didreg_FE)
 
 data_potential <- data %>%
   mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-  mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+  mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
   filter(!(time == 0 & C > 0 & non_response == 1)) %>%
   select(id, time, D, C, Y, d,did)
-
+nrow(data_potential)
 
 
 ###############################################
@@ -127,7 +127,7 @@ for (i in 1:n_simulations) {
   
   data <- data %>%
     mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
     filter(!(time == 0 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   
@@ -193,7 +193,7 @@ for (i in 1:n_simulations) {
     )
   data <-data %>%
     mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
     filter(!(time == 0 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   # Create a balanced sample
@@ -257,7 +257,7 @@ for (i in 1:n_simulations) {
     )
   data <- data %>%
     mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
     filter(!(time == 0 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   # Create a balanced sample
@@ -344,7 +344,7 @@ metrics_df_OLS
 #  # Simulate non-response
 #  data_SSEL <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
 #    filter(!(time == 0 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d)
 #  
@@ -407,7 +407,7 @@ metrics_df_OLS
 #  # Simulate non-response
 #  data_SSEL <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
 #    filter(!(time == 0 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d)
 #  # Create a balanced sample
@@ -470,7 +470,7 @@ metrics_df_OLS
 #  # Simulate non-response
 #  data_SSEL <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
 #    filter(!(time == 0 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d)
 #  # Create a balanced sample

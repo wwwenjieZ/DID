@@ -74,19 +74,6 @@ didreg_FE <-plm(Y ~ d+ time+did, data = data, model = "within")
 true_coeffs_OLS<-coef(didreg_OLS)
 true_coeffs_FE<-coef(didreg_FE)
 
-###############################################
-
-#non-response simulation
-
-###############################################
-
-data_potential <- data %>%
-  mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-  mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
-  filter(!(time == 0 & C > 0 & non_response == 1)) %>%
-  select(id, time, D, C, Y, d,did)
-
-
 
 ###############################################
 

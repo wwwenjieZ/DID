@@ -84,7 +84,7 @@ data <- data |>
    filter(!(time == 0 & C>0 & non_response == 1)) %>%
    select(id, time, D, C, Y, d, did)
  
- 
+nrow(data_potential)
  
  
  ###############################################
