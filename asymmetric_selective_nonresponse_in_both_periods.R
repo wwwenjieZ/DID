@@ -76,17 +76,19 @@ data <- data |>
  #non-response simulation
  
  ###############################################
- 
+ data <- data %>%
+   mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
  data_potential <-    data%>%
-   mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-   mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+   mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
+   mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
    filter(!(time == 1 & C>0 & non_response == 1)) %>%
    filter(!(time == 0 & C>0 & non_response == 1)) %>%
-   select(id, time, D, C, Y, d, did)
+   select(id, time, D, C, Y, d, did,non_response_prob,non_response )
  
 nrow(data_potential)
+max(data_potential $non_response_prob)
  
- 
+View(data_potential)
  ###############################################
  
  #unbalance data set simulation
@@ -123,10 +125,11 @@ nrow(data_potential)
        Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
        did = d * time
      )
-   
+   data <- data %>%
+     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
    data %>%
-     mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-     mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
      filter(!(time == 0 & C > 0 & non_response == 1)) %>%
      filter(!(time == 1 & C > 0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d,did)
@@ -148,7 +151,7 @@ nrow(data_potential)
  }
  
  metrics_OLS_unbal <- lapply(names(results_df_OLS_unbal), function(param) {
-   calculate_metrics(results_df_OLS_unbal[[param]], true_coeffs_OLS[param])
+   calculate_metrics_unbal(results_df_OLS_unbal[[param]], true_coeffs_OLS[param])
  })
  
  # Convert to data frame and print result
@@ -191,10 +194,11 @@ nrow(data_potential)
        Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
        did = d * time
      )
-   
+   data <- data %>%
+     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
    data%>%
-     mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-     mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
+     mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
      filter(!(time == 1 & C>0 & non_response == 1)) %>%
      filter(!(time == 0 & C>0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d, did)
@@ -258,9 +262,11 @@ nrow(data_potential)
        Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
        did = d * time
      )
+   data <- data %>%
+     mutate(Y_standardized = ( Y- mean(Y)) / sd(Y))
    data%>%
-     mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-     mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
+     mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
      filter(!(time == 1 & C>0 & non_response == 1)) %>%
      filter(!(time == 0 & C>0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d, did)
@@ -297,9 +303,9 @@ nrow(data_potential)
  rownames(metrics_FE) <- names(results_FE)
  metrics_FE
  
- metrics_df_OLS <- do.call(rbind, metrics_OLS)
- rownames(metrics_df_OLS) <- names(results_df_OLS)
- metrics_df_OLS
+ metrics_OLS <- do.call(rbind, metrics_OLS)
+ rownames(metrics_OLS) <- names(results_OLS)
+ metrics_OLS
  
  
 ###################***OLS########
@@ -319,7 +325,7 @@ nrow(data_potential)
 #
 #data_potential <- data%>%
 #  mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-#  mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#  mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
 #  filter(!(time == 1 & C>0 & non_response == 1)) %>%
 #  filter(!(time == 0 & C>0 & non_response == 1)) %>%
 #  select(id, time, D, C, Y)
@@ -357,7 +363,7 @@ nrow(data_potential)
 #  # Simulate non-response
 #  data_ASel <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-#    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
 #    filter(!(time == 1 & C>0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y,d)
 #  
@@ -412,7 +418,7 @@ nrow(data_potential)
 #  # Simulate non-response
 #  data_ASel <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-#    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
 #    filter(!(time == 1 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y,d)
 #  
@@ -485,7 +491,7 @@ nrow(data_potential)
 #  
 #  data <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.9, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
 #    filter(!(time == 1 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d, did)
 #  

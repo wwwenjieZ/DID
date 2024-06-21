@@ -113,7 +113,6 @@ for (i in 1:n_simulations) {
       did = d * time
     )
   
-   data <- data  
    D0 <- which(data$D == 0)  
    D1 <- which(data$D == 1)  
    
@@ -142,7 +141,7 @@ calculate_metrics_unbal <- function(estimates, true_coeffs_OLS) {
 }
 
 metrics_OLS_unbal <- lapply(names(results_df_OLS_unbal), function(param) {
-  calculate_metrics(results_df_OLS_unbal[[param]], true_coeffs_OLS[param])
+  calculate_metrics_unbal (results_df_OLS_unbal[[param]], true_coeffs_OLS[param])
 })
 
 # Convert to data frame and print result
@@ -302,9 +301,9 @@ metrics_FE <- do.call(rbind, metrics)
 rownames(metrics_FE) <- names(results_FE)
 metrics_FE
 
-metrics_df_OLS <- do.call(rbind, metrics_OLS)
-rownames(metrics_df_OLS) <- names(results_df_OLS)
-metrics_df_OLS
+metrics_OLS <- do.call(rbind, metrics_OLS)
+rownames(metrics_OLS) <- names(results_OLS)
+metrics_OLS
 
 
 ##Un-balance

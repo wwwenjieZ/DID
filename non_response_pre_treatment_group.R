@@ -80,20 +80,22 @@ true_coeffs_FE<-coef(didreg_FE)
 #non-response simulation
 
 ###############################################
-
+data <- data %>%
+  mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
 data_potential <- data %>%
-  mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-  mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+  mutate(non_response_prob = pnorm(Y_standardized , mean = 0, sd = 1)) %>%
+  mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
   filter(!(time == 0 & C > 0 & non_response == 1)) %>%
-  select(id, time, D, C, Y, d,did)
+  select(id, time, D, C, Y, d,did,non_response_prob,non_response )
 nrow(data_potential)
-
+View(data_potential)
 
 ###############################################
 
 #unbalance data set simulation
 
 ###############################################
+set.seed(123)
 n_simulations=1000
 model_results_OLS_unbal <- vector("list", n_simulations)
 for (i in 1:n_simulations) {
@@ -124,10 +126,11 @@ for (i in 1:n_simulations) {
       Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
       did = d * time
     )
-  
   data <- data %>%
-    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+    mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
+  data <- data %>%
+    mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
     filter(!(time == 0 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   
@@ -148,7 +151,7 @@ calculate_metrics_unbal <- function(estimates, true_coeffs_OLS) {
 }
 
 metrics_OLS_unbal <- lapply(names(results_df_OLS_unbal), function(param) {
-  calculate_metrics(results_df_OLS_unbal[[param]], true_coeffs_OLS[param])
+  calculate_metrics_unbal(results_df_OLS_unbal[[param]], true_coeffs_OLS[param])
 })
 
 # Convert to data frame and print result
@@ -191,9 +194,12 @@ for (i in 1:n_simulations) {
       Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
       did = d * time
     )
+  
+  data <- data %>%
+    mutate(Y_standardized = (Y- mean(Y)) / sd(Y))
   data <-data %>%
-    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+    mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
     filter(!(time == 0 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   # Create a balanced sample
@@ -212,7 +218,7 @@ results_FE <- do.call(rbind, model_results_FE) %>%
   as.data.frame()
 
 # calculate bias, std, and RMSE
-calculate_metrics <- function(estimates, true_coeffs_FE) {
+calculate_metrics_FE <- function(estimates, true_coeffs_FE) {
   bias <- mean(estimates - true_coeffs_FE)
   std <- sd(estimates)
   rmse <- sqrt(mean((estimates - true_coeffs_FE)^2))
@@ -220,8 +226,8 @@ calculate_metrics <- function(estimates, true_coeffs_FE) {
 }
 
 
-metrics <- lapply(names(results_FE), function(param) {
-  calculate_metrics(results_FE[[param]], true_coeffs_FE[param])
+metrics_FE  <- lapply(names(results_FE), function(param) {
+  calculate_metrics_FE (results_FE[[param]], true_coeffs_FE[param])
 })
 
 
@@ -256,8 +262,10 @@ for (i in 1:n_simulations) {
       did = d * time
     )
   data <- data %>%
-    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+    mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
+  data <- data %>%
+    mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
     filter(!(time == 0 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   # Create a balanced sample
@@ -288,13 +296,13 @@ metrics_OLS <- lapply(names(results_OLS), function(param) {
 
 
 # print result
-metrics_FE <- do.call(rbind, metrics)
+metrics_FE <- do.call(rbind, metrics_FE )
 rownames(metrics_FE) <- names(results_FE)
 metrics_FE
 
-metrics_df_OLS <- do.call(rbind, metrics_OLS)
-rownames(metrics_df_OLS) <- names(results_df_OLS)
-metrics_df_OLS
+metrics_OLS <- do.call(rbind, metrics_OLS)
+rownames(metrics_OLS) <- names(results_OLS)
+metrics_OLS
 
 ##unbalance
 ###################***OLS########
@@ -344,7 +352,7 @@ metrics_df_OLS
 #  # Simulate non-response
 #  data_SSEL <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
 #    filter(!(time == 0 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d)
 #  
@@ -407,7 +415,7 @@ metrics_df_OLS
 #  # Simulate non-response
 #  data_SSEL <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
 #    filter(!(time == 0 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d)
 #  # Create a balanced sample
@@ -470,7 +478,7 @@ metrics_df_OLS
 #  # Simulate non-response
 #  data_SSEL <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
 #    filter(!(time == 0 & C > 0 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d)
 #  # Create a balanced sample
