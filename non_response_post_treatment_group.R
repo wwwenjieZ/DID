@@ -33,27 +33,27 @@ data <- data.frame(
   d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
 )
 
-data <- data |>  
-  within({  
-    C <- rnorm(n * 2, mean = 0, sd = 1)    
-    U_0_0 <- rnorm(n * 2, mean = 0, sd = 1)  
-    U_0_1 <- rnorm(n * 2, mean = 0, sd = 1)  
-    U_1_0 <- rnorm(n * 2, mean = 0, sd = 1)  
-    U_1_1 <- rnorm(n * 2, mean = 0, sd = 1)  
-    E <- rnorm(n * 2, mean = 0, sd = 1)  
-    
-    # Define treatment and potential outcomes
-    D_true  <- ifelse(time == 1, 1, 0)
-    D<- D_true 
-    U_selected <- ifelse(time == 0 & D == 0, U_0_0,
-                         ifelse(time == 0 & D == 1, U_0_1,
-                                ifelse(time == 1 & D == 0, U_1_0,
-                                       ifelse(time == 1 & D == 1, U_1_1, NA))))
-    
-    # Simulate outcomes Y based on potential outcomes
-    Y <- alpha + beta1 * time + beta2 * D_true + theta * (D_true * d) + C * D_true + U_selected
-  })
-
+data <- data %>%
+  mutate(
+    C = rnorm(n * 2, mean = 0, sd = 1),
+    U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
+    U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
+    U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
+    U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
+    E = rnorm(n * 2, mean = 0, sd = 1)
+  ) %>%
+  mutate(
+    Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
+    D = ifelse(Dtrue, 1, 0),
+    U_selected = case_when(
+      time == 0 & D == 0 ~ U_0_0,
+      time == 0 & D == 1 ~ U_0_1,
+      time == 1 & D == 0 ~ U_1_0,
+      time == 1 & D == 1 ~ U_1_1
+    ),
+    Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+    did = d * time
+  )
 # Check the data structure 
 str(data)
 head(data)
