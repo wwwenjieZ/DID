@@ -86,7 +86,7 @@ data <- data %>%
   mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
 data_potential <- data%>%
   mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-  mutate(non_response = ifelse(non_response_prob > 0.2, 1, 0)) %>%
+  mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
   filter(!(time == 1 & C>0 & non_response == 1)) %>%
   select(id, time, D, C, Y,non_response_prob)
 nrow(data_potential)
