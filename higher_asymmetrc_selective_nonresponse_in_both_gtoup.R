@@ -27,27 +27,27 @@ data <- data.frame(
   d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
 )
 
-data <- data |>  
-  within({  
-    C <- rnorm(n * 2, mean = 0, sd = 1)    
-    U_0_0 <- rnorm(n * 2, mean = 0, sd = 1)  
-    U_0_1 <- rnorm(n * 2, mean = 0, sd = 1)  
-    U_1_0 <- rnorm(n * 2, mean = 0, sd = 1)  
-    U_1_1 <- rnorm(n * 2, mean = 0, sd = 1)  
-    E <- rnorm(n * 2, mean = 0, sd = 1)  
-    
-    # Define treatment and potential outcomes
-    D_true  <- ifelse(time == 1, 1, 0)
-    D<- D_true 
-    U_selected <- ifelse(time == 0 & D == 0, U_0_0,
-                         ifelse(time == 0 & D == 1, U_0_1,
-                                ifelse(time == 1 & D == 0, U_1_0,
-                                       ifelse(time == 1 & D == 1, U_1_1, NA))))
-    
-    # Simulate outcomes Y based on potential outcomes
-    Y <- alpha + beta1 * time + beta2 * D_true + theta * (D_true * d) + C * D_true + U_selected
-  })
-
+data <- data %>%
+  mutate(
+    C = rnorm(n * 2, mean = 0, sd = 1),
+    U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
+    U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
+    U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
+    U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
+    E = rnorm(n * 2, mean = 0, sd = 1)
+  ) %>%
+  mutate(
+    Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
+    D = ifelse(Dtrue, 1, 0),
+    U_selected = case_when(
+      time == 0 & D == 0 ~ U_0_0,
+      time == 0 & D == 1 ~ U_0_1,
+      time == 1 & D == 0 ~ U_1_0,
+      time == 1 & D == 1 ~ U_1_1
+    ),
+    Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
+    did = d * time
+  )
 # Check the data structure 
 str(data)
 head(data)
@@ -86,9 +86,18 @@ data_potential <- data%>%
   select(id, time, D, C, Y, d, did,non_response_prob,non_response )
 
 nrow(data_potential)
+ids_in_both_periods <- intersect(
+  data_potential %>% filter(time == 0) %>% select(id) %>% unlist(),
+  data_potential %>% filter(time == 1) %>% select(id) %>% unlist()
+)
+
+data_potential<-data_potential %>% filter(id %in% ids_in_both_periods)
+
+nrow(data_potential)
+
 max(data_potential $non_response_prob)
-# Check
-View(data_potential)
+
+
 
 ###############################################
 
@@ -123,7 +132,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
       did = d * time
     )
   data <- data %>%
@@ -192,7 +201,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
       did = d * time
     )
   data <- data %>%
@@ -203,8 +212,7 @@ for (i in 1:n_simulations) {
     filter(!(time == 1 & non_response == 1)) %>%
     filter(!(time == 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d, did)
-  
-  # Create a balanced sample
+
   ids_in_both_periods <- intersect(
     data %>% filter(time == 0) %>% select(id) %>% unlist(),
     data %>% filter(time == 1) %>% select(id) %>% unlist()
@@ -260,7 +268,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
       did = d * time
     )
   data <- data %>%
@@ -358,7 +366,7 @@ metrics_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected
 #    })
 #  
 #  # Simulate non-response
@@ -413,7 +421,7 @@ metrics_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected
 #    })
 #  
 #  # Simulate non-response
@@ -486,7 +494,7 @@ metrics_OLS
 #        time == 1 & D == 0 ~ U_1_0,
 #        time == 1 & D == 1 ~ U_1_1
 #      ),
-#      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+#      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
 #      did = d * time
 #    )
 #  

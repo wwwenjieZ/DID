@@ -51,7 +51,7 @@ data <- data %>%
       time == 1 & D == 0 ~ U_1_0,
       time == 1 & D == 1 ~ U_1_1
     ),
-    Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+    Y = alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected,
     did = d * time
   )
 # Check the data structure 
@@ -126,7 +126,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected,
       did = d * time
     )
   data <- data %>%
@@ -194,7 +194,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected,
       did = d * time
     )
   data <- data %>%
@@ -260,7 +260,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected,
       did = d * time
     )
   data <- data %>%
@@ -336,7 +336,7 @@ metrics_df_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected
 #    })
 #  
 #  # Simulate non-response
@@ -394,7 +394,7 @@ metrics_df_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected
 #    })
 #  
 #  # Simulate non-response
@@ -454,7 +454,7 @@ metrics_df_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time* d) + C * D + U_selected
 #    })
 #  
 #  # Simulate non-response

@@ -47,7 +47,7 @@ data <- data %>%
       time == 1 & D == 0 ~ U_1_0,
       time == 1 & D == 1 ~ U_1_1
     ),
-    Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+    Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
     did = d * time
   )
 
@@ -81,8 +81,8 @@ true_coeffs_FE<-coef(didreg_FE)
 
 ##############################################
 
-#pR2=0.2
-pR2=0.5
+#pR2=0.5
+pR2=0.2
 n_simulations=1000
 set.seed(123)
 model_results_OLS_unbal <- vector("list", n_simulations)
@@ -111,7 +111,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
       did = d * time
     )
   
@@ -183,7 +183,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
       did = d * time
     )
   
@@ -255,7 +255,7 @@ for (i in 1:n_simulations) {
         time == 1 & D == 0 ~ U_1_0,
         time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected,
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
       did = d * time
     )
   
@@ -348,7 +348,7 @@ metrics_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected
 #    })
 #  
 #  data_pR2_sim <- data  
@@ -419,7 +419,7 @@ metrics_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected
 #    })
 #  
 #  data_pR2_sim <- data  
@@ -488,7 +488,7 @@ metrics_OLS
 #                                         ifelse(time == 1 & D == 1, U_1_1, NA))))
 #      
 #      # Simulate outcomes Y based on potential outcomes
-#      Y <- alpha + beta1 * time + beta2 * D + theta * (D * d) + C * D + U_selected
+#      Y <- alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected
 #    })
 #  
 #  data_pR2_sim <- data  
