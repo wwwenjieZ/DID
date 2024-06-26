@@ -26,32 +26,32 @@ delta <- 5
 
 set.seed(123)
 data <- data.frame(
-  id = rep(1:(n), each = 2),   
+  id = rep(1:n, each = 2),   
   time = rep(0:1, times = n),  
-  d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
-)
+  d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
 
 data <- data %>%
   mutate(
-    C = rnorm(n * 2, mean = 0, sd = 1),
+    C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
     U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
     U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
     U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
     U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
     E = rnorm(n * 2, mean = 0, sd = 1)
-  ) %>%
+  )%>%
+  group_by(id) %>%
   mutate(
-    Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-    D = ifelse(Dtrue, 1, 0),
+    Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+    D = ifelse(Dtrue, 1, 0)
+  ) %>%
+  ungroup() %>%
+  mutate(
     U_selected = case_when(
-      time == 0 & D == 0 ~ U_0_0,
-      time == 0 & D == 1 ~ U_0_1,
-      time == 1 & D == 0 ~ U_1_0,
-      time == 1 & D == 1 ~ U_1_1
-    ),
-    Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-    did = d * time
-  )
+      time == 0 & d == 0 ~ U_0_0,
+      time == 0 & d == 1 ~ U_0_1,
+      time == 1 & d == 0 ~ U_1_0,
+      time == 1 & d == 1 ~ U_1_1),
+    Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
 
 # Check the data structure 
 str(data)
@@ -103,30 +103,30 @@ for (i in 1:n_simulations) {
   data <- data.frame(
     id = rep(1:n, each = 2),   
     time = rep(0:1, times = n),  
-    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-  )
+    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
   
   data <- data %>%
     mutate(
-      C = rnorm(n * 2, mean = 0, sd = 1),
+      C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
       E = rnorm(n * 2, mean = 0, sd = 1)
-    ) %>%
+    )%>%
+    group_by(id) %>%
     mutate(
-      Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-      D = ifelse(Dtrue, 1, 0),
+      Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+      D = ifelse(Dtrue, 1, 0)
+    ) %>%
+    ungroup() %>%
+    mutate(
       U_selected = case_when(
-        time == 0 & D == 0 ~ U_0_0,
-        time == 0 & D == 1 ~ U_0_1,
-        time == 1 & D == 0 ~ U_1_0,
-        time == 1 & D == 1 ~ U_1_1
-      ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-      did = d * time
-    )
+        time == 0 & d == 0 ~ U_0_0,
+        time == 0 & d == 1 ~ U_0_1,
+        time == 1 & d == 0 ~ U_1_0,
+        time == 1 & d == 1 ~ U_1_1),
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
   data <- data %>%
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data <- data %>%
@@ -171,30 +171,30 @@ for (i in 1:n_simulations) {
   data <- data.frame(
     id = rep(1:n, each = 2),   
     time = rep(0:1, times = n),  
-    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-  )
+    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
   
   data <- data %>%
     mutate(
-      C = rnorm(n * 2, mean = 0, sd = 1),
+      C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
       E = rnorm(n * 2, mean = 0, sd = 1)
-    ) %>%
+    )%>%
+    group_by(id) %>%
     mutate(
-      Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-      D = ifelse(Dtrue, 1, 0),
+      Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+      D = ifelse(Dtrue, 1, 0)
+    ) %>%
+    ungroup() %>%
+    mutate(
       U_selected = case_when(
-        time == 0 & D == 0 ~ U_0_0,
-        time == 0 & D == 1 ~ U_0_1,
-        time == 1 & D == 0 ~ U_1_0,
-        time == 1 & D == 1 ~ U_1_1
-      ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-      did = d * time
-    )
+        time == 0 & d == 0 ~ U_0_0,
+        time == 0 & d == 1 ~ U_0_1,
+        time == 1 & d == 0 ~ U_1_0,
+        time == 1 & d == 1 ~ U_1_1),
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
   
   data <- data %>%
     mutate(Y_standardized = (Y- mean(Y)) / sd(Y))
@@ -238,30 +238,30 @@ for (i in 1:n_simulations) {
   data <- data.frame(
     id = rep(1:n, each = 2),   
     time = rep(0:1, times = n),  
-    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-  )
+    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
   
   data <- data %>%
     mutate(
-      C = rnorm(n * 2, mean = 0, sd = 1),
+      C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
       E = rnorm(n * 2, mean = 0, sd = 1)
-    ) %>%
+    )%>%
+    group_by(id) %>%
     mutate(
-      Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-      D = ifelse(Dtrue, 1, 0),
+      Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+      D = ifelse(Dtrue, 1, 0)
+    ) %>%
+    ungroup() %>%
+    mutate(
       U_selected = case_when(
-        time == 0 & D == 0 ~ U_0_0,
-        time == 0 & D == 1 ~ U_0_1,
-        time == 1 & D == 0 ~ U_1_0,
-        time == 1 & D == 1 ~ U_1_1
-      ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-      did = d * time
-    )
+        time == 0 & d == 0 ~ U_0_0,
+        time == 0 & d == 1 ~ U_0_1,
+        time == 1 & d == 0 ~ U_1_0,
+        time == 1 & d == 1 ~ U_1_1),
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
   data <- data %>%
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data <- data %>%

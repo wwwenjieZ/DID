@@ -22,11 +22,10 @@ delta <- 5
 
 set.seed(123)
 data <- data.frame(
-  id = rep(1:(n), each = 2),   
-  time = rep(0:1, times = n),  
-  d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
+   id = rep(1:(n), each = 2),   
+   time = rep(0:1, times = n),  
+   d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
 )
-
 data <- data %>%
    mutate(
       C = rnorm(n * 2, mean = 0, sd = 1),
@@ -45,9 +44,9 @@ data <- data %>%
          time == 1 & D == 0 ~ U_1_0,
          time == 1 & D == 1 ~ U_1_1
       ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-      did = d * time
-   )
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
+      did = d * time )
+
  # Check the data structure 
  str(data)
  head(data)
@@ -80,7 +79,7 @@ data <- data %>%
    mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
  data_potential <-    data%>%
    mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-   mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
+   mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
    filter(!(time == 1 & C>0 & non_response == 1)) %>%
    filter(!(time == 0 & C>0 & non_response == 1)) %>%
    select(id, time, D, C, Y, d, did,non_response_prob,non_response )
@@ -106,38 +105,36 @@ max(data_potential $non_response_prob)
  set.seed(123)
  model_results_OLS_unbal <- vector("list", n_simulations)
  for (i in 1:n_simulations) {
-   data <- data.frame(
-     id = rep(1:n, each = 2),   
-     time = rep(0:1, times = n),  
-     d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-   )
-   
-   data <- data %>%
-     mutate(
-       C = rnorm(n * 2, mean = 0, sd = 1),
-       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
-       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
-       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
-       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
-       E = rnorm(n * 2, mean = 0, sd = 1)
-     ) %>%
-     mutate(
-       Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-       D = ifelse(Dtrue, 1, 0),
-       U_selected = case_when(
-         time == 0 & D == 0 ~ U_0_0,
-         time == 0 & D == 1 ~ U_0_1,
-         time == 1 & D == 0 ~ U_1_0,
-         time == 1 & D == 1 ~ U_1_1
-       ),
-       Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-       did = d * time
-     )
+    data <- data.frame(
+       id = rep(1:(n), each = 2),   
+       time = rep(0:1, times = n),  
+       d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
+    )
+    data <- data %>%
+       mutate(
+          C = rnorm(n * 2, mean = 0, sd = 1),
+          U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
+          U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
+          U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
+          U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
+          E = rnorm(n * 2, mean = 0, sd = 1)
+       ) %>%
+       mutate(
+          Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
+          D = ifelse(Dtrue, 1, 0),
+          U_selected = case_when(
+             time == 0 & D == 0 ~ U_0_0,
+             time == 0 & D == 1 ~ U_0_1,
+             time == 1 & D == 0 ~ U_1_0,
+             time == 1 & D == 1 ~ U_1_1
+          ),
+          Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
+          did = d * time )
    data <- data %>%
      mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
    data %>%
      mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
-     mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
      filter(!(time == 0 & C > 0 & non_response == 1)) %>%
      filter(!(time == 1 & C > 0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d,did)
@@ -175,38 +172,36 @@ max(data_potential $non_response_prob)
  set.seed(123)
  model_results_FE <- vector("list", n_simulations)
  for (i in 1:n_simulations) {
-   data <- data.frame(
-     id = rep(1:n, each = 2),   
-     time = rep(0:1, times = n),  
-     d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-   )
-   
-   data <- data %>%
-     mutate(
-       C = rnorm(n * 2, mean = 0, sd = 1),
-       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
-       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
-       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
-       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
-       E = rnorm(n * 2, mean = 0, sd = 1)
-     ) %>%
-     mutate(
-       Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-       D = ifelse(Dtrue, 1, 0),
-       U_selected = case_when(
-         time == 0 & D == 0 ~ U_0_0,
-         time == 0 & D == 1 ~ U_0_1,
-         time == 1 & D == 0 ~ U_1_0,
-         time == 1 & D == 1 ~ U_1_1
-       ),
-       Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-       did = d * time
-     )
+    data <- data.frame(
+       id = rep(1:(n), each = 2),   
+       time = rep(0:1, times = n),  
+       d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
+    )
+    data <- data %>%
+       mutate(
+          C = rnorm(n * 2, mean = 0, sd = 1),
+          U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
+          U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
+          U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
+          U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
+          E = rnorm(n * 2, mean = 0, sd = 1)
+       ) %>%
+       mutate(
+          Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
+          D = ifelse(Dtrue, 1, 0),
+          U_selected = case_when(
+             time == 0 & D == 0 ~ U_0_0,
+             time == 0 & D == 1 ~ U_0_1,
+             time == 1 & D == 0 ~ U_1_0,
+             time == 1 & D == 1 ~ U_1_1
+          ),
+          Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
+          did = d * time )
    data <- data %>%
      mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
    data%>%
      mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-     mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
      filter(!(time == 1 & C>0 & non_response == 1)) %>%
      filter(!(time == 0 & C>0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d, did)
@@ -243,38 +238,36 @@ max(data_potential $non_response_prob)
  set.seed(123)
  model_results_OLS <- vector("list", n_simulations)
  for (i in 1:n_simulations) {
-   data <- data.frame(
-     id = rep(1:n, each = 2),   
-     time = rep(0:1, times = n),  
-     d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-   )
-   
-   data <- data %>%
-     mutate(
-       C = rnorm(n * 2, mean = 0, sd = 1),
-       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
-       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
-       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
-       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
-       E = rnorm(n * 2, mean = 0, sd = 1)
-     ) %>%
-     mutate(
-       Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-       D = ifelse(Dtrue, 1, 0),
-       U_selected = case_when(
-         time == 0 & D == 0 ~ U_0_0,
-         time == 0 & D == 1 ~ U_0_1,
-         time == 1 & D == 0 ~ U_1_0,
-         time == 1 & D == 1 ~ U_1_1
-       ),
-       Y = alpha + beta1 * time + beta2 * D + theta * (time * d)  + C * D + U_selected,
-       did = d * time
-     )
+    data <- data.frame(
+       id = rep(1:(n), each = 2),   
+       time = rep(0:1, times = n),  
+       d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
+    )
+    data <- data %>%
+       mutate(
+          C = rnorm(n * 2, mean = 0, sd = 1),
+          U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
+          U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
+          U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
+          U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
+          E = rnorm(n * 2, mean = 0, sd = 1)
+       ) %>%
+       mutate(
+          Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
+          D = ifelse(Dtrue, 1, 0),
+          U_selected = case_when(
+             time == 0 & D == 0 ~ U_0_0,
+             time == 0 & D == 1 ~ U_0_1,
+             time == 1 & D == 0 ~ U_1_0,
+             time == 1 & D == 1 ~ U_1_1
+          ),
+          Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
+          did = d * time )
    data <- data %>%
      mutate(Y_standardized = ( Y- mean(Y)) / sd(Y))
    data%>%
      mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-     mutate(non_response = ifelse(non_response_prob > 0.7, 1, 0)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
      filter(!(time == 1 & C>0 & non_response == 1)) %>%
      filter(!(time == 0 & C>0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d, did)

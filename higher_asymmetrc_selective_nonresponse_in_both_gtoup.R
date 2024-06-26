@@ -18,41 +18,39 @@ gamma <- -1
 beta1 <- 2
 beta2 <- -2
 theta <- 1
-delta <- 5 
+delta <- 5
 
 set.seed(123)
 data <- data.frame(
-  id = rep(1:(n), each = 2),   
+  id = rep(1:n, each = 2),   
   time = rep(0:1, times = n),  
-  d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)  
-)
+  d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
 
 data <- data %>%
   mutate(
-    C = rnorm(n * 2, mean = 0, sd = 1),
+    C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
     U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
     U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
     U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
     U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
     E = rnorm(n * 2, mean = 0, sd = 1)
-  ) %>%
+  )%>%
+  group_by(id) %>%
   mutate(
-    Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-    D = ifelse(Dtrue, 1, 0),
+    Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+    D = ifelse(Dtrue, 1, 0)
+  ) %>%
+  ungroup() %>%
+  mutate(
     U_selected = case_when(
-      time == 0 & D == 0 ~ U_0_0,
-      time == 0 & D == 1 ~ U_0_1,
-      time == 1 & D == 0 ~ U_1_0,
-      time == 1 & D == 1 ~ U_1_1
-    ),
-    Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
-    did = d * time
-  )
+      time == 0 & d == 0 ~ U_0_0,
+      time == 0 & d == 1 ~ U_0_1,
+      time == 1 & d == 0 ~ U_1_0,
+      time == 1 & d == 1 ~ U_1_1),
+    Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
 # Check the data structure 
 str(data)
 head(data)
-sum(data$D == 0)
-sum(data$D == 1)
 
 ##################################################
 
@@ -80,12 +78,12 @@ data <- data %>%
   mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
 data_potential <- data%>%
   mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-  mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
-  filter(!(time == 1 &  non_response == 1)) %>%
-  filter(!(time == 0 & non_response == 1)) %>%
+  mutate(non_response = ifelse(non_response_prob > 0.3, 1, 0)) %>%
+  filter(!(time == 1 & C>0 &non_response == 1)) %>%
+  filter(!(time == 0 & C>0 &non_response == 1)) %>%
   select(id, time, D, C, Y, d, did,non_response_prob,non_response )
-
 nrow(data_potential)
+
 ids_in_both_periods <- intersect(
   data_potential %>% filter(time == 0) %>% select(id) %>% unlist(),
   data_potential %>% filter(time == 1) %>% select(id) %>% unlist()
@@ -104,44 +102,44 @@ max(data_potential $non_response_prob)
 #unbalance data set simulation
 
 ###############################################
-n_simulations=1000
+n_simulations=100
 set.seed(123)
 model_results_OLS_unbal <- vector("list", n_simulations)
 for (i in 1:n_simulations) {
   data <- data.frame(
     id = rep(1:n, each = 2),   
     time = rep(0:1, times = n),  
-    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-  )
+    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
   
   data <- data %>%
     mutate(
-      C = rnorm(n * 2, mean = 0, sd = 1),
+      C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
       E = rnorm(n * 2, mean = 0, sd = 1)
-    ) %>%
+    )%>%
+    group_by(id) %>%
     mutate(
-      Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-      D = ifelse(Dtrue, 1, 0),
+      Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+      D = ifelse(Dtrue, 1, 0)
+    ) %>%
+    ungroup() %>%
+    mutate(
       U_selected = case_when(
-        time == 0 & D == 0 ~ U_0_0,
-        time == 0 & D == 1 ~ U_0_1,
-        time == 1 & D == 0 ~ U_1_0,
-        time == 1 & D == 1 ~ U_1_1
-      ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
-      did = d * time
-    )
+        time == 0 & d == 0 ~ U_0_0,
+        time == 0 & d == 1 ~ U_0_1,
+        time == 1 & d == 0 ~ U_1_0,
+        time == 1 & d == 1 ~ U_1_1),
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
   data <- data %>%
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data %>%
     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
-    filter(!(time == 0 & non_response == 1)) %>%
-    filter(!(time == 1 & non_response == 1)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.3, 1, 0)) %>%
+    filter(!(time == 0 & C>0 &non_response == 1)) %>%
+    filter(!(time == 1 & C>0 &non_response == 1)) %>%
     select(id, time, D, C, Y, d,did)
   
   didOLS_unbal <- lm(Y ~ d + time + did, data = data)
@@ -180,37 +178,37 @@ for (i in 1:n_simulations) {
   data <- data.frame(
     id = rep(1:n, each = 2),   
     time = rep(0:1, times = n),  
-    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-  )
+    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
   
   data <- data %>%
     mutate(
-      C = rnorm(n * 2, mean = 0, sd = 1),
+      C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
       E = rnorm(n * 2, mean = 0, sd = 1)
-    ) %>%
+    )%>%
+    group_by(id) %>%
     mutate(
-      Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-      D = ifelse(Dtrue, 1, 0),
+      Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+      D = ifelse(Dtrue, 1, 0)
+    ) %>%
+    ungroup() %>%
+    mutate(
       U_selected = case_when(
-        time == 0 & D == 0 ~ U_0_0,
-        time == 0 & D == 1 ~ U_0_1,
-        time == 1 & D == 0 ~ U_1_0,
-        time == 1 & D == 1 ~ U_1_1
-      ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
-      did = d * time
-    )
+        time == 0 & d == 0 ~ U_0_0,
+        time == 0 & d == 1 ~ U_0_1,
+        time == 1 & d == 0 ~ U_1_0,
+        time == 1 & d == 1 ~ U_1_1),
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
   data <- data %>%
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data%>%
     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
-    filter(!(time == 1 & non_response == 1)) %>%
-    filter(!(time == 0 & non_response == 1)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.3, 1, 0)) %>%
+    filter(!(time == 1 & C>0 &non_response == 1)) %>%
+    filter(!(time == 0 & C>0 &non_response == 1)) %>%
     select(id, time, D, C, Y, d, did)
 
   ids_in_both_periods <- intersect(
@@ -247,37 +245,37 @@ for (i in 1:n_simulations) {
   data <- data.frame(
     id = rep(1:n, each = 2),   
     time = rep(0:1, times = n),  
-    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2)
-  )
+    d = rep(sample(c(0, 1), n, replace = TRUE), each = 2))
   
   data <- data %>%
     mutate(
-      C = rnorm(n * 2, mean = 0, sd = 1),
+      C = rep(rnorm(n, mean = 0, sd = 1), each = 2),
       U_0_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_0_1 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_0 = rnorm(n * 2, mean = 0, sd = 1),
       U_1_1 = rnorm(n * 2, mean = 0, sd = 1),
       E = rnorm(n * 2, mean = 0, sd = 1)
-    ) %>%
+    )%>%
+    group_by(id) %>%
     mutate(
-      Dtrue = time > 0 & (gamma + beta1 + beta2 + theta + delta * C + E) > 0,
-      D = ifelse(Dtrue, 1, 0),
+      Dtrue = any((time == 1) & (gamma + beta1 + beta2 + theta + delta * C + E > 0)),
+      D = ifelse(Dtrue, 1, 0)
+    ) %>%
+    ungroup() %>%
+    mutate(
       U_selected = case_when(
-        time == 0 & D == 0 ~ U_0_0,
-        time == 0 & D == 1 ~ U_0_1,
-        time == 1 & D == 0 ~ U_1_0,
-        time == 1 & D == 1 ~ U_1_1
-      ),
-      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected,
-      did = d * time
-    )
+        time == 0 & d == 0 ~ U_0_0,
+        time == 0 & d == 1 ~ U_0_1,
+        time == 1 & d == 0 ~ U_1_0,
+        time == 1 & d == 1 ~ U_1_1),
+      Y = alpha + beta1 * time + beta2 * D + theta * (time * d) + C * D + U_selected, did = d * time)
   data <- data %>%
     mutate(Y_standardized = ( Y- mean(Y)) / sd(Y))
   data%>%
     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
-    filter(!(time == 1 & non_response == 1)) %>%
-    filter(!(time == 0 & non_response == 1)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.3, 1, 0)) %>%
+    filter(!(time == 1 & C>0 &non_response == 1)) %>%
+    filter(!(time == 0 & C>0 &non_response == 1)) %>%
     select(id, time, D, C, Y, d, did)
   
   # Create a balanced sample
@@ -334,7 +332,7 @@ metrics_OLS
 #
 #data_potential <- data%>%
 #  mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-#  mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#  mutate(non_response = ifelse(non_response_prob > 0.1, 1, 0)) %>%
 #  filter(!(time == 1 & non_response == 1)) %>%
 #  filter(!(time == 0 & non_response == 1)) %>%
 #  select(id, time, D, C, Y)
@@ -372,7 +370,7 @@ metrics_OLS
 #  # Simulate non-response
 #  data_ASel <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.1, 1, 0)) %>%
 #    filter(!(time == 1 & non_response == 1)) %>%
 #    select(id, time, D, C, Y,d)
 #  
@@ -427,7 +425,7 @@ metrics_OLS
 #  # Simulate non-response
 #  data_ASel <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1))%>%
-#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.1, 1, 0)) %>%
 #    filter(!(time == 1 & non_response == 1)) %>%
 #    select(id, time, D, C, Y,d)
 #  
@@ -460,7 +458,7 @@ metrics_OLS
 #
 #n_simulations <- 100  # Example value
 #n <- 50  # Example value
-#alpha <- 0.5
+#alpha <- 0.1
 #beta1 <- 1
 #beta2 <- 1.5
 #theta <- 2
@@ -500,7 +498,7 @@ metrics_OLS
 #  
 #  data <- data %>%
 #    mutate(non_response_prob = pnorm(Y, mean = 0, sd = 1)) %>%
-#    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+#    mutate(non_response = ifelse(non_response_prob > 0.1, 1, 0)) %>%
 #    filter(!(time == 1 & non_response == 1)) %>%
 #    select(id, time, D, C, Y, d, did)
 #  
