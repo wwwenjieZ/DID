@@ -79,7 +79,7 @@ data <- data %>%
    mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
  data_potential <-    data%>%
    mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-   mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+   mutate(non_response = ifelse(non_response_prob > 0.86, 1, 0)) %>%
    filter(!(time == 1 & C>0 & non_response == 1)) %>%
    filter(!(time == 0 & C>0 & non_response == 1)) %>%
    select(id, time, D, C, Y, d, did,non_response_prob,non_response )
@@ -93,6 +93,10 @@ data <- data %>%
  data_potential<-data_potential %>% filter(id %in% ids_in_both_periods)
 nrow(data_potential)
 
+#non_response_prob > 0.5   7994
+#non_response_prob > 0.6     8503
+#non_response_prob > 0.72    8992
+#non_response_prob > 0.86    9509
 max(data_potential $non_response_prob)
  
 
@@ -134,7 +138,7 @@ max(data_potential $non_response_prob)
      mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
    data %>%
      mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
-     mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.86, 1, 0)) %>%
      filter(!(time == 0 & C > 0 & non_response == 1)) %>%
      filter(!(time == 1 & C > 0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d,did)
@@ -201,7 +205,7 @@ max(data_potential $non_response_prob)
      mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
    data%>%
      mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-     mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.86, 1, 0)) %>%
      filter(!(time == 1 & C>0 & non_response == 1)) %>%
      filter(!(time == 0 & C>0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d, did)
@@ -267,7 +271,7 @@ max(data_potential $non_response_prob)
      mutate(Y_standardized = ( Y- mean(Y)) / sd(Y))
    data%>%
      mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-     mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+     mutate(non_response = ifelse(non_response_prob > 0.86, 1, 0)) %>%
      filter(!(time == 1 & C>0 & non_response == 1)) %>%
      filter(!(time == 0 & C>0 & non_response == 1)) %>%
      select(id, time, D, C, Y, d, did)

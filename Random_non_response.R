@@ -80,8 +80,8 @@ true_coeffs_FE<-coef(didreg_FE)
 
 ##############################################
 #pR2=0.3
-pR2=0.5
-#pR2=0.2
+#pR2=0.4
+pR2=0.15
 n_rows_to_remove <- ceiling(pR2 * nrow(data))
 rows_to_remove <- sample(seq_len(nrow(data)), size = n_rows_to_remove)
 data_potnetial <- data[-rows_to_remove, ]
@@ -103,9 +103,9 @@ nrow(data_potnetial_balance)
 ##############################################
 #pR2=0.3
 #pR2=0.5
-pR2=0.2
-
-n_simulations=100
+#pR2=0.15
+pR2=0.05
+n_simulations=1000
 set.seed(123)
 model_results_OLS_unbal <- vector("list", n_simulations)
 for (i in 1:n_simulations) {

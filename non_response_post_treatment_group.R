@@ -86,12 +86,14 @@ data <- data %>%
   mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
 data_potential <- data%>%
   mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1))%>%
-  mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+  mutate(non_response = ifelse(non_response_prob > 0.45, 1, 0)) %>%
   filter(!(time == 1 & C>0 & non_response == 1)) %>%
   select(id, time, D, C, Y,non_response_prob)
 nrow(data_potential)
-
-
+#non_response_prob > 0.5  (9522)
+#non_response_prob > 0.73  (9014)
+#non_response_prob > 0.6  (8510)
+#non_response_prob > 0.45  (8037)
 ids_in_both_periods <- intersect(
   data_potential %>% filter(time == 0) %>% select(id) %>% unlist(),
   data_potential %>% filter(time == 1) %>% select(id) %>% unlist()
@@ -140,7 +142,7 @@ for (i in 1:n_simulations) {
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data <- data %>%
     mutate(non_response_prob = pnorm(Y_standardized , mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.45, 1, 0)) %>%
     filter(!(time == 1 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d, did)
   
@@ -207,7 +209,7 @@ for (i in 1:n_simulations) {
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data <- data %>%
     mutate(non_response_prob = pnorm(Y_standardized, mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.45, 1, 0)) %>%
     filter(!(time == 1 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d, did)
   # Create a balanced sample
@@ -238,6 +240,9 @@ metrics_FE <- lapply(names(results_FE), function(param) {
   calculate_metrics_FE(results_FE[[param]], true_coeffs_FE[param])
 })
 
+metrics_FE <- do.call(rbind, metrics_FE)
+rownames(metrics_FE) <- names(results_FE)
+metrics_FE
 
 set.seed(123)
 model_results_OLS <- vector("list", n_simulations)
@@ -273,7 +278,7 @@ for (i in 1:n_simulations) {
     mutate(Y_standardized = (Y - mean(Y)) / sd(Y))
   data <- data %>%
     mutate(non_response_prob = pnorm(Y_standardized , mean = 0, sd = 1)) %>%
-    mutate(non_response = ifelse(non_response_prob > 0.5, 1, 0)) %>%
+    mutate(non_response = ifelse(non_response_prob > 0.45, 1, 0)) %>%
     filter(!(time == 1 & C > 0 & non_response == 1)) %>%
     select(id, time, D, C, Y, d, did)
   # Create a balanced sample
@@ -304,9 +309,7 @@ metrics_OLS <- lapply(names(results_OLS), function(param) {
 
 
 # print result
-metrics_FE <- do.call(rbind, metrics_FE)
-rownames(metrics_FE) <- names(results_FE)
-metrics_FE
+
 
 metrics_df_OLS <- do.call(rbind, metrics_OLS)
 rownames(metrics_df_OLS) <- names(results_OLS)
